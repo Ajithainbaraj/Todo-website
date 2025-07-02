@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📋 Multi-Category To-Do List</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to top left, #00b4db, #0083b0);
+      padding: 40px 20px;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: rgba(255,255,255,0.1);
+      padding: 30px;
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .task-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 25px;
+    }
+
+    select, input[type="text"] {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+      font-size: 1rem;
+      flex: 1;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #ffffff;
+      color: #0083b0;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .task-section {
+      margin-top: 20px;
+    }
+
+    .task-section h2 {
+      margin-bottom: 10px;
+      border-bottom: 1px solid #fff;
+      padding-bottom: 5px;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      background: rgba(255,255,255,0.2);
+      margin-bottom: 10px;
+      padding: 12px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    li.completed span {
+      text-decoration:line-through;
+      color: #fff;
+    }
+
+    li input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.2);
+      accent-color: white;
+    }
+
+    .actions button {
+      background-color: crimson;
+      color: #fff;
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .task-form {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 Multi-Category To-Do List</h1>
+
+    <form class="task-form" onsubmit="addTask(event)">
+      <select id="categorySelect" required>
+        <option value="" disabled selected>Select Category</option>
+        <option value="Personal">Personal</option>
+        <option value="Work">Work</option>
+        <option value="Health">Health</option>
+        <option value="Shopping">Shopping</option>
+        <option value="Coding">Coding</option>
+        <option value="Others">Others</option>
+      </select>
+      <input type="text" id="taskInput" placeholder="Enter new task..." required>
+      <button type="submit">Add</button>
+    </form>
+
+    <div class="task-section" id="allCategories"></div>
+  </div>
+
+  <script>
+  let tasks = JSON.parse(localStorage.getItem("tasks")) || {
+    Personal: [],
+    Work: [],
+    Health: [],
+    Shopping: [],
+    Coding: [],
+    Others: []
+  };
+
+  function saveTasks() {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }
+
+  function addTask(event) {
+    event.preventDefault();
+    const category = document.getElementById("categorySelect").value;
+    const taskText = document.getElementById("taskInput").value.trim();
+    if (!category || !taskText) return;
+
+    tasks[category].push({ text: taskText, completed: false });
+    document.getElementById("taskInput").value = "";
+    saveTasks();
+    renderTasks();
+  }
+
+  function toggle(category, index) {
+    tasks[category][index].completed = !tasks[category][index].completed;
+    saveTasks();
+    renderTasks();
+  }
+
+  function del(category, index) {
+    tasks[category].splice(index, 1);
+    saveTasks();
+    renderTasks();
+  }
+
+  function renderTasks() {
+    const container = document.getElementById("allCategories");
+    container.innerHTML = "";
+
+    for (let cat in tasks) {
+      const section = document.createElement("div");
+      section.className = "task-section";
+      section.innerHTML = `<h2> ${cat}</h2><ul id="${cat}-list"></ul>`;
+      container.appendChild(section);
+
+      const ul = section.querySelector("ul");
+      tasks[cat].forEach((task, i) => {
+        const li = document.createElement("li");
+        if (task.completed) li.classList.add("completed");
+
+        const left = document.createElement("div");
+        left.style.display = "flex";
+        left.style.alignItems = "center";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.completed;
+        checkbox.onchange = () => toggle(cat, i);
+
+        const span = document.createElement("span");
+        span.textContent = task.text;
+
+        left.appendChild(checkbox);
+        left.appendChild(span);
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.onclick = () => del(cat, i);
+        delBtn.className = "actions";
+
+        li.appendChild(left);
+        li.appendChild(delBtn);
+        ul.appendChild(li);
+      });
+    }
+  }
+
+  renderTasks();
+</script>
+
+</body>
+</html>
